@@ -1,6 +1,8 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Collections.Generic;
+using System.Text.RegularExpressions;
 
 namespace Puzzle3
 {
@@ -8,78 +10,32 @@ namespace Puzzle3
     {
         static void Main(string[] args)
         {
-            var lines = File.ReadAllLines("./input.txt");
-            var claims = lines.Select(line =>
+            var claims = File.ReadAllLines("./input.txt").Select(line =>
             {
-                var data = line.Split(' ');
-                var id = int.Parse(data[0].Substring(1, data[0].Length - 1));
-
-                var _pos = data[2].Split(',');
-                var left = int.Parse(_pos[0]);
-                var top = int.Parse(_pos[1].Substring(0, _pos[1].Length - 1));
-
-                var _size = data[3].Split('x');
-                var x = int.Parse(_size[0]);
-                var y = int.Parse(_size[1]);
-
-                return (id, left, top, x, y);
-            });
-
-            var sizeX = claims.Max(x => x.left) + claims.Max(x => x.x);
-            var sizeY = claims.Max(x => x.top) + claims.Max(x => x.y);
-
+                var data = Regex.Split(line, @"\D+").Skip(1).Select(x => int.Parse(x)).ToList();
+                return (data[0], data[1], data[2], data[3], data[4], new HashSet<int>());
+            }).ToList();
+            var sizeX = claims.Max(x => x.Item2) + claims.Max(x => x.Item4);
+            var sizeY = claims.Max(x => x.Item3) + claims.Max(x => x.Item5);
             var arr = new int[sizeX * sizeY];
 
-            foreach (var claim in claims)
+            for (int i = 0; i < claims.Count; i++)
             {
-                for (int i = 0; i < claim.x; i++)
+                for (int j = 0; j < claims[i].Item4; j++)
                 {
-                    for (int j = 0; j < claim.y; j++)
+                    for (int k = 0; k < claims[i].Item5; k++)
                     {
-                        var x = claim.left + i;
-                        var y = claim.top + j;
-
-                        arr[y * sizeY + x]++;
+                        var index = (claims[i].Item3 + k) * sizeY + claims[i].Item2 + j;
+                        arr[index]++;
+                        claims[i].Item6.Add(index);
                     }
                 }
             }
-
-            var nonOverlapId = 0;
-            foreach (var claim in claims)
-            {
-                var _break = false;
-                for (int i = 0; i < claim.x; i++)
-                {
-                    for (int j = 0; j < claim.y; j++)
-                    {
-                        var x = claim.left + i;
-                        var y = claim.top + j;
-
-                        if (arr[y * sizeY + x] > 1)
-                        {
-                            _break = true;
-                            break;
-                        }
-                    }
-                    if (_break)
-                    {
-                        break;
-                    }
-                }
-                if (_break)
-                {
-                    _break = false;
-                }
-                else
-                {
-                    nonOverlapId = claim.id;
-                    break;
-                }
-            }
-
+            var newT = claims.FirstOrDefault(claim => claim.Item6.Where(x => arr[x] > 1).Count() == 0).Item1;
             var res = arr.Count(x => x > 1);
+
             Console.WriteLine($"Result (Part 1): {res}");
-            Console.WriteLine($"Result (Part 2): {nonOverlapId}");
+            Console.WriteLine($"Result (Part 2): {newT}");
         }
     }
 }
