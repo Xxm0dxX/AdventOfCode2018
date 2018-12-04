@@ -17,7 +17,6 @@ namespace Puzzle4
                                 dateS = dateS.Substring(1, dateS.Length - 2);
                                 return DateTime.Parse(dateS);
                             });
-            // var groups = 
             var groups = GroupLines(lines.ToList());
             var max = groups.Where(g => g.Value.Count == groups.Max(x => x.Value.Count)).FirstOrDefault();
 
